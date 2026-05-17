@@ -1,0 +1,272 @@
+<!--
+  order.html — Sipariş Durumu Sayfası
+  -------------------------------------------------------
+  Verilen siparişin mevcut durumunu adım adım gösterir.
+  Durum adımları: Sipariş Alındı → Hazırlanıyor → Kuryede → Teslim Edildi.
+  Demo: Sayfa yüklenince animasyonlu ilerleme simülasyonu başlar.
+  localStorage'dan sipariş detayları okunur.
+-->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sipariş Durumu — LezzetKapı</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- Üst Navigasyon -->
+<nav class="navbar">
+  <div class="navbar-logo">Lezzet<span>Kapı</span></div>
+  <ul class="navbar-links">
+    <li><a href="index.html">🏠 Ana Sayfa</a></li>
+    <li><a href="cart.html">🛒 Sepet</a></li>
+    <li><a href="order.html" class="aktif">📦 Siparişlerim</a></li>
+    <li><a href="login.html">👤 Çıkış</a></li>
+  </ul>
+</nav>
+
+<div class="sayfa-kapsayici" style="max-width:640px;">
+
+  <!-- Sipariş Durumu Kartı -->
+  <div class="kart" id="siparisKarti">
+
+    <!-- Üst Renkli Başlık Alanı -->
+    <div class="siparis-kart-ust">
+      <div class="siparis-id" id="siparisNo">Sipariş No: SP-XXXXX</div>
+      <div class="siparis-durum-baslik" id="durumBaslik">⏳ Hazırlanıyor...</div>
+      <div style="font-size:0.85rem; opacity:0.85; margin-top:0.3rem;" id="siparisZaman"></div>
+    </div>
+
+    <!-- İlerleme Çubuğu -->
+    <div class="ilerleme-cubugu-arka">
+      <div class="ilerleme-cubugu-on" id="ilerlemeCubugu" style="width:0%"></div>
+    </div>
+
+    <!-- Durum Adımları -->
+    <div class="durum-adim-listesi">
+
+      <!-- Adım 1: Sipariş Alındı -->
+      <div class="durum-adim" id="adim1">
+        <div class="durum-adim-daire">✅</div>
+        <div class="durum-adim-icerik">
+          <div class="durum-adim-baslik">Sipariş Alındı</div>
+          <div class="durum-adim-zaman" id="adim1Zaman">Bekleniyor...</div>
+        </div>
+      </div>
+
+      <!-- Adım 2: Hazırlanıyor -->
+      <div class="durum-adim" id="adim2">
+        <div class="durum-adim-daire">👨‍🍳</div>
+        <div class="durum-adim-icerik">
+          <div class="durum-adim-baslik">Restoran Hazırlıyor</div>
+          <div class="durum-adim-zaman" id="adim2Zaman">Bekleniyor...</div>
+        </div>
+      </div>
+
+      <!-- Adım 3: Kuryeye Verildi -->
+      <div class="durum-adim" id="adim3">
+        <div class="durum-adim-daire">🛵</div>
+        <div class="durum-adim-icerik">
+          <div class="durum-adim-baslik">Kuryede</div>
+          <div class="durum-adim-zaman" id="adim3Zaman">Bekleniyor...</div>
+        </div>
+      </div>
+
+      <!-- Adım 4: Teslim Edildi -->
+      <div class="durum-adim" id="adim4">
+        <div class="durum-adim-daire">🏠</div>
+        <div class="durum-adim-icerik">
+          <div class="durum-adim-baslik">Teslim Edildi</div>
+          <div class="durum-adim-zaman" id="adim4Zaman">Bekleniyor...</div>
+        </div>
+      </div>
+
+    </div><!-- /durum-adim-listesi -->
+
+    <!-- Sipariş Detayları (localStorage'dan) -->
+    <div style="padding: 0 2rem 2rem;">
+      <hr class="bolucü" />
+      <h3 style="font-family:'Playfair Display',serif; margin-bottom:1rem;">📝 Sipariş Detayı</h3>
+      <div id="siparisDetay" style="font-size:0.9rem; color:var(--yazi-gri);">
+        <!-- JavaScript ile doldurulur -->
+      </div>
+    </div>
+
+  </div><!-- /siparisKarti -->
+
+  <!-- Aksiyon Butonları -->
+  <div style="display:flex; gap:1rem; margin-top:1.5rem;">
+    <a href="index.html" style="flex:1;">
+      <button class="btn btn-birincil btn-buyuk btn-tam-genislik">
+        🍽️ Yeni Sipariş Ver
+      </button>
+    </a>
+    <button class="btn btn-ikincil btn-buyuk" onclick="siparisIptal()" style="flex:1;">
+      ❌ Siparişi İptal Et
+    </button>
+  </div>
+
+  <!-- Kurye Bilgisi Kutusu -->
+  <div class="kart" style="padding:1.2rem; margin-top:1.5rem; display:flex; gap:1rem; align-items:center;"
+       id="kuryeKutu">
+    <div style="
+      width:55px; height:55px; border-radius:50%;
+      background:linear-gradient(135deg,var(--turuncu),var(--kirmizi));
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.5rem; flex-shrink:0; color:#fff;
+    ">🛵</div>
+    <div>
+      <div style="font-weight:600; font-size:0.95rem;">Kurye: Ahmet Y.</div>
+      <div style="font-size:0.82rem; color:var(--yazi-gri);">Plaka: 34 ABC 123</div>
+      <div style="font-size:0.82rem; color:var(--yazi-gri);">Tahmini varış: <strong>~15 dakika</strong></div>
+    </div>
+    <button class="btn btn-birincil" style="margin-left:auto;"
+            onclick="alert('Kurye arama — demo amaçlı devre dışı')">
+      📞 Ara
+    </button>
+  </div>
+
+</div><!-- /sayfa-kapsayici -->
+
+<footer class="footer">
+  © 2025 LezzetKapı — Üniversite Demo Projesi
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ============================================================
+     Sipariş Durumu Simülasyonu
+     Gerçek projede WebSocket veya SSE (Server-Sent Events) kullanılır.
+     Demo: setTimeout ile adımlar otomatik ilerler.
+  ============================================================ */
+
+  /** Durum adımlarının konfigürasyonu */
+  const DURUM_ADIMLARI = [
+    { id: 'adim1', baslik: '✅ Sipariş Alındı',          cubuk: 25,  gecikme: 500  },
+    { id: 'adim2', baslik: '👨‍🍳 Restoran Hazırlıyor',   cubuk: 50,  gecikme: 3000 },
+    { id: 'adim3', baslik: '🛵 Kuryede',                  cubuk: 75,  gecikme: 6000 },
+    { id: 'adim4', baslik: '🏠 Teslim Edildi!',           cubuk: 100, gecikme: 10000 },
+  ];
+
+  /** Aktif sipariş verisini localStorage'dan oku */
+  const aktifSiparis = JSON.parse(localStorage.getItem('aktifSiparis') || 'null');
+
+  window.addEventListener('DOMContentLoaded', () => {
+    siparisYukle();
+    siparisSimulasyonuBaslat();
+  });
+
+  /**
+   * siparisYukle() — Sipariş bilgilerini ve ürün detaylarını sayfaya yazar.
+   */
+  function siparisYukle() {
+    if (aktifSiparis) {
+      document.getElementById('siparisNo').textContent =
+        `Sipariş No: ${aktifSiparis.siparisNo}`;
+      document.getElementById('siparisZaman').textContent =
+        `Sipariş tarihi: ${aktifSiparis.tarih}`;
+
+      // Ürün listesini oluştur
+      let detayHtml = '';
+      for (const urun of aktifSiparis.urunler) {
+        detayHtml += `
+          <div style="display:flex; justify-content:space-between; padding:0.4rem 0; border-bottom:1px solid var(--sinir);">
+            <span>${urun.emoji} ${urun.ad} × ${urun.adet}</span>
+            <span style="font-weight:600; color:var(--turuncu);">₺${urun.fiyat * urun.adet}</span>
+          </div>`;
+      }
+      const toplam = aktifSiparis.urunler.reduce((t,u) => t + u.fiyat*u.adet, 0);
+      detayHtml += `
+        <div style="display:flex; justify-content:space-between; padding:0.6rem 0; font-weight:700; font-size:1rem;">
+          <span>Genel Toplam</span>
+          <span style="color:var(--turuncu);">₺${toplam + 15}</span>
+        </div>`;
+      document.getElementById('siparisDetay').innerHTML = detayHtml;
+
+    } else {
+      // Demo sipariş (localStorage boşsa)
+      document.getElementById('siparisNo').textContent  = 'Sipariş No: SP-47291';
+      document.getElementById('siparisZaman').textContent = 'Sipariş tarihi: Demo';
+      document.getElementById('siparisDetay').innerHTML =
+        '<p style="color:var(--yazi-gri);">Demo sipariş — gerçek ürün verisi yok.</p>';
+    }
+  }
+
+  /**
+   * siparisSimulasyonuBaslat() — Durum adımlarını sırayla tamamlanmış olarak işaretler.
+   */
+  function siparisSimulasyonuBaslat() {
+    DURUM_ADIMLARI.forEach((adim, i) => {
+      setTimeout(() => {
+        durumAdimTamamla(adim.id, i);
+        document.getElementById('ilerlemeCubugu').style.width = adim.cubuk + '%';
+        document.getElementById('durumBaslik').textContent    = adim.baslik;
+
+        // Son adımda konfeti efekti
+        if (i === DURUM_ADIMLARI.length - 1) {
+          setTimeout(teslimKonfeti, 300);
+        }
+      }, adim.gecikme);
+    });
+  }
+
+  /**
+   * durumAdimTamamla() — Belirli bir adımı görsel olarak tamamlanmış işaretler.
+   */
+  function durumAdimTamamla(adimId, indeks) {
+    const el = document.getElementById(adimId);
+    if (!el) return;
+
+    // Önceki aktif adımı tamamlandı yap
+    document.querySelectorAll('.durum-adim.aktif-adim').forEach(a => {
+      a.classList.remove('aktif-adim');
+      a.classList.add('tamamlandi');
+    });
+
+    // Bu adımı aktif yap (son adım değilse), son adımsa tamamlandı
+    if (indeks < DURUM_ADIMLARI.length - 1) {
+      el.classList.add('aktif-adim');
+    } else {
+      el.classList.add('tamamlandi');
+    }
+    el.classList.remove('bekliyor');
+
+    // Zaman damgasını yaz
+    document.getElementById(adimId + 'Zaman').textContent =
+      new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  /**
+   * teslimKonfeti() — Teslim edildiğinde toast ile kutlama mesajı gösterir.
+   */
+  function teslimKonfeti() {
+    toastGoster('🎉 Siparişiniz teslim edildi! Afiyet olsun!');
+    document.getElementById('siparisKarti').style.boxShadow =
+      '0 0 0 3px #10B981, 0 12px 40px rgba(16,185,129,0.2)';
+  }
+
+  /**
+   * siparisIptal() — Demo iptal akışı.
+   */
+  function siparisIptal() {
+    if (confirm('Siparişi iptal etmek istediğinize emin misiniz?')) {
+      localStorage.removeItem('aktifSiparis');
+      toastGoster('❌ Sipariş iptal edildi.');
+      setTimeout(() => { window.location.href = 'index.html'; }, 1500);
+    }
+  }
+
+  /** toastGoster() — Kısa bildirim mesajı gösterir */
+  function toastGoster(mesaj) {
+    const t = document.getElementById('toast');
+    t.textContent = mesaj;
+    t.classList.add('goster');
+    setTimeout(() => t.classList.remove('goster'), 3500);
+  }
+</script>
+
+</body>
+</html>

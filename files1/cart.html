@@ -1,0 +1,286 @@
+<!--
+  cart.html — Alışveriş Sepeti Sayfası
+  -------------------------------------------------------
+  Kullanıcının sepetine eklediği ürünleri listeler.
+  localStorage'dan okunan verilerle çalışır.
+  Adet artırma/azaltma, ürün silme ve toplam hesaplama
+  işlevleri mevcuttur. Sipariş ver butonu order.html'e yönlendirir.
+-->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sepetim — LezzetKapı</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- Üst Navigasyon -->
+<nav class="navbar">
+  <div class="navbar-logo">Lezzet<span>Kapı</span></div>
+  <ul class="navbar-links">
+    <li><a href="index.html">🏠 Ana Sayfa</a></li>
+    <li><a href="cart.html" class="aktif">🛒 Sepet</a></li>
+    <li><a href="order.html">📦 Siparişlerim</a></li>
+    <li><a href="login.html">👤 Çıkış</a></li>
+  </ul>
+</nav>
+
+<div class="sayfa-kapsayici">
+  <h1 class="sayfa-baslik">🛒 Sepetim</h1>
+  <p class="sayfa-alt-baslik" id="sepetAltBaslik">Seçtiğin lezzetler burada seni bekliyor.</p>
+
+  <!-- Ana Düzen: Sol=Ürünler, Sağ=Özet -->
+  <div class="sepet-duzen" id="sepetDuzen">
+
+    <!-- Sol: Sepet Ürün Listesi -->
+    <div>
+      <div class="kart" id="sepetListeKutu">
+        <!-- JavaScript ile doldurulur -->
+        <div id="sepetListe"></div>
+      </div>
+
+      <!-- Sepeti Temizle Butonu -->
+      <div style="margin-top:1rem; text-align:right;">
+        <button class="btn btn-tehlike" onclick="sepetTemizle()" id="temizleBtn">
+          🗑 Sepeti Temizle
+        </button>
+      </div>
+    </div>
+
+    <!-- Sağ: Sipariş Özeti -->
+    <div class="ozet-kutu" id="ozetKutu">
+      <h2 class="ozet-baslik">📋 Sipariş Özeti</h2>
+
+      <div class="ozet-satir">
+        <span>Ara Toplam</span>
+        <span id="araToplam">₺0</span>
+      </div>
+      <div class="ozet-satir">
+        <span>Teslimat Ücreti</span>
+        <span id="teslimatUcret">₺0</span>
+      </div>
+      <div class="ozet-satir">
+        <span>İndirim</span>
+        <span style="color:#10B981;" id="indirim">-₺0</span>
+      </div>
+
+      <div class="ozet-toplam">
+        <span>Toplam</span>
+        <span id="genelToplam">₺0</span>
+      </div>
+
+      <!-- Promosyon Kodu (Görsel Demo) -->
+      <div style="margin-bottom:1.2rem;">
+        <div style="display:flex; gap:0.5rem;">
+          <input class="form-girdi" type="text" id="promoKod" placeholder="Promosyon kodu" style="flex:1;" />
+          <button class="btn btn-ikincil" onclick="promoUygula()">Uygula</button>
+        </div>
+        <p style="font-size:0.78rem; color:var(--yazi-gri); margin-top:0.3rem;">
+          Demo kodu: <strong>HOSGELDIN</strong>
+        </p>
+      </div>
+
+      <!-- Sipariş Ver Butonu -->
+      <button
+        class="btn btn-birincil btn-buyuk btn-tam-genislik"
+        id="siparisVerBtn"
+        onclick="siparisVer()"
+      >
+        🚀 Sipariş Ver
+      </button>
+
+      <!-- Alışverişe Devam Et -->
+      <a href="index.html">
+        <button class="btn btn-ikincil btn-tam-genislik" style="margin-top:0.8rem;">
+          ← Alışverişe Devam Et
+        </button>
+      </a>
+    </div>
+
+  </div><!-- /sepetDuzen -->
+
+  <!-- Boş Sepet (başlangıçta gizli) -->
+  <div class="bos-durum" id="bosSepet" style="display:none;">
+    <div class="bos-durum-simge">🛒</div>
+    <h3>Sepetiniz Boş</h3>
+    <p>Henüz bir şey eklemediniz. Restoranlara göz atın!</p>
+    <br />
+    <a href="index.html">
+      <button class="btn btn-birincil btn-buyuk">🍽️ Restoranlara Git</button>
+    </a>
+  </div>
+
+</div><!-- /sayfa-kapsayici -->
+
+<footer class="footer">
+  © 2025 LezzetKapı — Üniversite Demo Projesi
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ============================================================
+     Sepet yönetimi — localStorage üzerinden çalışır
+  ============================================================ */
+
+  /** Sabit teslimat ücreti (TL) */
+  const TESLIMAT_UCRETI = 15;
+
+  /** Sepeti localStorage'dan yükle */
+  let sepet = JSON.parse(localStorage.getItem('sepet') || '[]');
+
+  /** Sayfa yüklenince sepeti çiz */
+  window.addEventListener('DOMContentLoaded', () => {
+    sepetCiz();
+  });
+
+  /**
+   * sepetCiz() — Sepet içeriğini sayfaya render eder.
+   * Sepet boşsa boş durum ekranını gösterir.
+   */
+  function sepetCiz() {
+    const liste     = document.getElementById('sepetListe');
+    const bos       = document.getElementById('bosSepet');
+    const duzen     = document.getElementById('sepetDuzen');
+
+    if (sepet.length === 0) {
+      duzen.style.display = 'none';
+      bos.style.display   = 'block';
+      return;
+    }
+
+    duzen.style.display = 'grid';
+    bos.style.display   = 'none';
+
+    // Ürün satırlarını oluştur
+    let html = '';
+    for (const urun of sepet) {
+      const satirToplam = urun.fiyat * urun.adet;
+      html += `
+        <div class="sepet-urun-satir">
+          <div class="sepet-urun-emoji">${urun.emoji}</div>
+          <div class="sepet-urun-bilgi">
+            <div class="sepet-urun-ad">${urun.ad}</div>
+            <div class="sepet-urun-restoran">${urun.restoranAd}</div>
+          </div>
+          <!-- Adet Kontrolü -->
+          <div class="adet-kontrol">
+            <button class="adet-btn" onclick="adetDegistir(${urun.id}, -1)">−</button>
+            <span class="adet-sayi">${urun.adet}</span>
+            <button class="adet-btn" onclick="adetDegistir(${urun.id}, +1)">+</button>
+          </div>
+          <!-- Ürün Toplam Fiyat -->
+          <div class="sepet-urun-fiyat">₺${satirToplam}</div>
+          <!-- Sil Butonu -->
+          <button class="btn btn-tehlike" style="padding:0.4rem 0.7rem; font-size:0.85rem;"
+                  onclick="urunSil(${urun.id})">✕</button>
+        </div>`;
+    }
+    liste.innerHTML = html;
+
+    // Fiyat özetini güncelle
+    ozetGuncelle();
+  }
+
+  /**
+   * adetDegistir() — Ürün adetini artırır veya azaltır.
+   * Adet 0'a düşerse ürün sepetten kaldırılır.
+   */
+  function adetDegistir(urunId, degisim) {
+    const index = sepet.findIndex(u => u.id === urunId);
+    if (index === -1) return;
+
+    sepet[index].adet += degisim;
+
+    if (sepet[index].adet <= 0) {
+      sepet.splice(index, 1);
+      toastGoster('🗑 Ürün sepetten kaldırıldı.');
+    }
+
+    localStorage.setItem('sepet', JSON.stringify(sepet));
+    sepetCiz();
+  }
+
+  /**
+   * urunSil() — Ürünü sepetten tamamen kaldırır.
+   */
+  function urunSil(urunId) {
+    sepet = sepet.filter(u => u.id !== urunId);
+    localStorage.setItem('sepet', JSON.stringify(sepet));
+    toastGoster('🗑 Ürün sepetten kaldırıldı.');
+    sepetCiz();
+  }
+
+  /**
+   * sepetTemizle() — Tüm sepeti siler.
+   */
+  function sepetTemizle() {
+    if (!confirm('Sepetteki tüm ürünler silinecek. Emin misiniz?')) return;
+    sepet = [];
+    localStorage.removeItem('sepet');
+    toastGoster('🗑 Sepet temizlendi.');
+    sepetCiz();
+  }
+
+  /**
+   * ozetGuncelle() — Fiyat özetini (ara toplam, indirim, genel toplam) hesaplar.
+   */
+  let promoUygulandı = false;
+
+  function ozetGuncelle() {
+    const araToplam  = sepet.reduce((t, u) => t + u.fiyat * u.adet, 0);
+    const indirim    = promoUygulandı ? Math.round(araToplam * 0.1) : 0;
+    const genelToplam = araToplam + TESLIMAT_UCRETI - indirim;
+
+    document.getElementById('araToplam').textContent    = `₺${araToplam}`;
+    document.getElementById('teslimatUcret').textContent = `₺${TESLIMAT_UCRETI}`;
+    document.getElementById('indirim').textContent       = `-₺${indirim}`;
+    document.getElementById('genelToplam').textContent   = `₺${genelToplam}`;
+  }
+
+  /**
+   * promoUygula() — Demo promosyon kodu uygular (%10 indirim).
+   */
+  function promoUygula() {
+    const kod = document.getElementById('promoKod').value.trim().toUpperCase();
+    if (kod === 'HOSGELDIN') {
+      promoUygulandı = true;
+      ozetGuncelle();
+      toastGoster('🎉 %10 indirim uygulandı!');
+    } else {
+      toastGoster('❌ Geçersiz promosyon kodu.');
+    }
+  }
+
+  /**
+   * siparisVer() — Sepeti onaylar ve sipariş sayfasına yönlendirir.
+   */
+  function siparisVer() {
+    if (sepet.length === 0) {
+      toastGoster('⚠️ Sepetiniz boş!');
+      return;
+    }
+    // Siparişi localStorage'a kaydet (order.html okuyacak)
+    localStorage.setItem('aktifSiparis', JSON.stringify({
+      urunler: sepet,
+      tarih: new Date().toLocaleString('tr-TR'),
+      siparisNo: 'SP-' + Math.floor(Math.random() * 90000 + 10000),
+    }));
+    // Sepeti temizle
+    localStorage.removeItem('sepet');
+    window.location.href = 'order.html';
+  }
+
+  /** toastGoster() — Kısa bildirim mesajı gösterir */
+  function toastGoster(mesaj) {
+    const t = document.getElementById('toast');
+    t.textContent = mesaj;
+    t.classList.add('goster');
+    setTimeout(() => t.classList.remove('goster'), 2500);
+  }
+</script>
+
+</body>
+</html>

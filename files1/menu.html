@@ -1,0 +1,292 @@
+<!--
+  menu.html — Restoran Menü Sayfası
+  -------------------------------------------------------
+  URL parametresinden (id=X) hangi restoranın seçildiğini
+  okur ve o restorana ait ürünleri kategorilere ayrılmış
+  şekilde listeler. Her ürün için "Sepete Ekle" butonu bulunur.
+  Sepet verileri localStorage'a kaydedilir.
+-->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Menü — LezzetKapı</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- Üst Navigasyon -->
+<nav class="navbar">
+  <div class="navbar-logo">Lezzet<span>Kapı</span></div>
+  <ul class="navbar-links">
+    <li><a href="index.html">🏠 Ana Sayfa</a></li>
+    <li>
+      <a href="cart.html" class="sepet-simge">
+        🛒 Sepet
+        <span class="sepet-rozet" id="navSepetSayi">0</span>
+      </a>
+    </li>
+    <li><a href="order.html">📦 Siparişlerim</a></li>
+    <li><a href="login.html">👤 Çıkış</a></li>
+  </ul>
+</nav>
+
+<div class="sayfa-kapsayici">
+
+  <!-- Geri Butonu -->
+  <a href="index.html" class="menu-geri-link">← Restoranlara Dön</a>
+
+  <!-- Restoran Bilgi Kutusu (JavaScript ile doldurulur) -->
+  <div class="menu-restoran-bilgi" id="restoranBilgi">
+    <div class="menu-restoran-logo" id="restoranLogo">🍕</div>
+    <div>
+      <h1 class="menu-restoran-ad" id="restoranAd">Yükleniyor...</h1>
+      <div id="restoranMeta" style="color:var(--yazi-gri); font-size:0.85rem; margin-top:0.3rem;"></div>
+      <div style="margin-top:0.5rem;" id="restoranRozet"></div>
+    </div>
+  </div>
+
+  <!-- Menü İçeriği (JavaScript ile doldurulur) -->
+  <div id="menuIcerigi"></div>
+
+</div><!-- /sayfa-kapsayici -->
+
+<footer class="footer">
+  © 2025 LezzetKapı — Üniversite Demo Projesi
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ============================================================
+     Sahte (fake) restoran & menü verisi
+     Gerçek projede bu veriler API'den çekilirdi.
+  ============================================================ */
+  const RESTORANLAR = {
+    1: {
+      ad: 'Bella Italia',
+      logo: '🍕',
+      kategori: 'İtalyan Mutfağı',
+      puan: '4.8 ★',
+      sure: '25-35 dk',
+      menu: {
+        'Pizzalar': [
+          { id: 101, ad: 'Margherita', aciklama: 'Domates sosu, mozzarella, fesleğen', fiyat: 129, emoji: '🍕' },
+          { id: 102, ad: 'Pepperoni', aciklama: 'Domates sosu, pepperoni, mozzarella', fiyat: 149, emoji: '🍕' },
+          { id: 103, ad: 'Quattro Formaggi', aciklama: 'Dört çeşit peynir, ceviz', fiyat: 169, emoji: '🍕' },
+        ],
+        'Makarnalar': [
+          { id: 104, ad: 'Spaghetti Carbonara', aciklama: 'Yumurta, pancetta, parmesan', fiyat: 119, emoji: '🍝' },
+          { id: 105, ad: 'Penne Arrabbiata', aciklama: 'Acı domates sosu, sarımsak', fiyat: 99,  emoji: '🍝' },
+        ],
+        'İçecekler': [
+          { id: 106, ad: 'Limonata',   aciklama: 'Taze sıkılmış limon', fiyat: 35, emoji: '🍋' },
+          { id: 107, ad: 'Kola (33cl)', aciklama: 'Soğuk servis',       fiyat: 25, emoji: '🥤' },
+        ],
+      },
+    },
+    2: {
+      ad: 'Burger Bros',
+      logo: '🍔',
+      kategori: 'Amerikan Mutfağı',
+      puan: '4.5 ★',
+      sure: '20-30 dk',
+      menu: {
+        'Burgerler': [
+          { id: 201, ad: 'Classic Cheeseburger', aciklama: '150g köfte, cheddar, marul, domates', fiyat: 109, emoji: '🍔' },
+          { id: 202, ad: 'BBQ Bacon Burger',     aciklama: 'Pastırmalı, BBQ soslu, soğan halkası', fiyat: 139, emoji: '🍔' },
+          { id: 203, ad: 'Double Smash',         aciklama: 'İki katlı köfte, özel sos',            fiyat: 159, emoji: '🍔' },
+        ],
+        'Atıştırmalıklar': [
+          { id: 204, ad: 'Parmak Patates (Büyük)', aciklama: 'Çıtır, tuzlu', fiyat: 55, emoji: '🍟' },
+          { id: 205, ad: 'Soğan Halkası',          aciklama: '8 adet, Ranch sos ile', fiyat: 65, emoji: '🧅' },
+        ],
+        'İçecekler': [
+          { id: 206, ad: 'Milkshake Çikolata', aciklama: '400ml', fiyat: 75, emoji: '🥤' },
+          { id: 207, ad: 'Ayran',              aciklama: 'Ev yapımı', fiyat: 20, emoji: '🥛' },
+        ],
+      },
+    },
+    3: {
+      ad: 'Osmanlı Sofrası',
+      logo: '🍖',
+      kategori: 'Türk Mutfağı',
+      puan: '4.9 ★',
+      sure: '30-45 dk',
+      menu: {
+        'Kebaplar': [
+          { id: 301, ad: 'Adana Kebap',  aciklama: 'Acılı kıyma kebabı, lavaş, közlenmiş biber', fiyat: 149, emoji: '🍖' },
+          { id: 302, ad: 'Urfa Kebap',   aciklama: 'Sade kıyma kebabı, soğan salatası',          fiyat: 149, emoji: '🍖' },
+          { id: 303, ad: 'Tavuk Şiş',    aciklama: 'Marine edilmiş tavuk, ızgara',               fiyat: 129, emoji: '🍗' },
+        ],
+        'Meze & Başlangıç': [
+          { id: 304, ad: 'Mercimek Çorbası', aciklama: 'Geleneksel tarif, limon ile', fiyat: 55, emoji: '🍲' },
+          { id: 305, ad: 'Cacık',            aciklama: 'Yoğurt, salatalık, nane',     fiyat: 45, emoji: '🥗' },
+        ],
+        'İçecekler': [
+          { id: 306, ad: 'Şalgam Suyu', aciklama: 'Acılı / Sade seçeneği ile', fiyat: 30, emoji: '🥤' },
+          { id: 307, ad: 'Ayran',       aciklama: 'Köy yoğurdundan',           fiyat: 25, emoji: '🥛' },
+        ],
+      },
+    },
+    4: {
+      ad: 'Sushi Zen',
+      logo: '🍣',
+      kategori: 'Japon Mutfağı',
+      puan: '4.6 ★',
+      sure: '40-55 dk',
+      menu: {
+        'Suşi & Maki': [
+          { id: 401, ad: 'Salmon Maki (8 parça)',   aciklama: 'Somon, avokado, salatalık',     fiyat: 149, emoji: '🍣' },
+          { id: 402, ad: 'California Roll (8 parça)', aciklama: 'Yengeç, avokado, salatalık', fiyat: 139, emoji: '🍱' },
+          { id: 403, ad: 'Spicy Tuna (8 parça)',    aciklama: 'Ton balığı, acı sos',           fiyat: 159, emoji: '🍣' },
+        ],
+        'Sıcak Yemekler': [
+          { id: 404, ad: 'Ramen',       aciklama: 'Miso bazlı çorba, yumurta, bambu filizi', fiyat: 129, emoji: '🍜' },
+          { id: 405, ad: 'Gyoza (6 ad)', aciklama: 'Izgara/haşlama mantı, sos ile',          fiyat: 95,  emoji: '🥟' },
+        ],
+        'İçecekler': [
+          { id: 406, ad: 'Yeşil Çay (Pot)', aciklama: 'Japon sencha', fiyat: 45, emoji: '🍵' },
+          { id: 407, ad: 'Miso Çorbası',   aciklama: 'Tofu, deniz yosunu', fiyat: 55, emoji: '🍲' },
+        ],
+      },
+    },
+    5: {
+      ad: 'Taco Fiesta',
+      logo: '🌮',
+      kategori: 'Meksika Mutfağı',
+      puan: '3.8 ★',
+      sure: '25-35 dk',
+      menu: {
+        'Taco & Burrito': [
+          { id: 501, ad: 'Beef Taco (3 adet)', aciklama: 'Kıymalı, salsa, guacamole',       fiyat: 119, emoji: '🌮' },
+          { id: 502, ad: 'Chicken Burrito',   aciklama: 'Tavuk, fasulye, pirinç, sour cream', fiyat: 129, emoji: '🌯' },
+          { id: 503, ad: 'Veggie Taco (3 ad)', aciklama: 'Izgara sebzeler, avokado, guacamole', fiyat: 109, emoji: '🌮' },
+        ],
+        'Atıştırmalıklar': [
+          { id: 504, ad: 'Nachos',   aciklama: 'Cheddar sosu, jalapeño, salsa', fiyat: 89, emoji: '🧀' },
+          { id: 505, ad: 'Quesadilla', aciklama: 'Cheddar, tavuk, biberler',   fiyat: 99, emoji: '🫓' },
+        ],
+        'İçecekler': [
+          { id: 506, ad: 'Horchata', aciklama: 'Geleneksel Meksika pirinç içeceği', fiyat: 45, emoji: '🥛' },
+          { id: 507, ad: 'Limonata', aciklama: 'Taze sıkılmış',                     fiyat: 35, emoji: '🍋' },
+        ],
+      },
+    },
+    6: {
+      ad: 'Pho Saigon',
+      logo: '🍜',
+      kategori: 'Vietnam Mutfağı',
+      puan: '4.4 ★',
+      sure: '30-40 dk',
+      menu: {
+        'Çorbalar': [
+          { id: 601, ad: 'Beef Pho (Büyük)',    aciklama: 'Et suyu bazlı, rice noodle, fesleğen', fiyat: 119, emoji: '🍜' },
+          { id: 602, ad: 'Chicken Pho (Büyük)', aciklama: 'Hafif et suyu, tavuk, nane',           fiyat: 109, emoji: '🍜' },
+        ],
+        'Ana Yemekler': [
+          { id: 603, ad: 'Bun Bo Hue',  aciklama: 'Acılı sığır eti çorbası',        fiyat: 125, emoji: '🍲' },
+          { id: 604, ad: 'Banh Mi',     aciklama: 'Vietnam usulü sandviç, turşu sebze', fiyat: 85, emoji: '🥖' },
+          { id: 605, ad: 'Spring Rolls (4 ad)', aciklama: 'Taze sarma, daldırma sos ile', fiyat: 95, emoji: '🥗' },
+        ],
+        'İçecekler': [
+          { id: 606, ad: 'Sütlü Vietnam Kahvesi', aciklama: 'Sıcak veya buzlu', fiyat: 55, emoji: '☕' },
+          { id: 607, ad: 'Liçi Suyu',             aciklama: 'Soğuk servis',     fiyat: 40, emoji: '🥤' },
+        ],
+      },
+    },
+  };
+
+  /* ============================================================
+     Sayfa Yükleme — URL parametresinden restoran ID'sini oku
+  ============================================================ */
+  const params      = new URLSearchParams(window.location.search);
+  const restoranId  = parseInt(params.get('id')) || 1;
+  const restoran    = RESTORANLAR[restoranId];
+
+  /** Sepet verisini localStorage'dan oku */
+  let sepet = JSON.parse(localStorage.getItem('sepet') || '[]');
+
+  /** Sayfa yüklenince restoran bilgisi ve menüyü render et */
+  window.addEventListener('DOMContentLoaded', () => {
+    sayfaYukle();
+    navSepetGuncelle();
+  });
+
+  /** sayfaYukle() — Restoran bilgi kutusunu ve menü kartlarını doldurur */
+  function sayfaYukle() {
+    document.title = `${restoran.ad} — LezzetKapı`;
+
+    // Restoran Bilgi Kutusu
+    document.getElementById('restoranLogo').textContent = restoran.logo;
+    document.getElementById('restoranAd').textContent   = restoran.ad;
+    document.getElementById('restoranMeta').innerHTML   =
+      `${restoran.kategori} &nbsp;|&nbsp; ${restoran.puan} &nbsp;|&nbsp; ⏱ ${restoran.sure}`;
+    document.getElementById('restoranRozet').innerHTML  =
+      `<span class="rozet rozet-yesil">✅ Açık</span>`;
+
+    // Menü Kategorileri ve Ürünler
+    const kapsayici = document.getElementById('menuIcerigi');
+    let html = '';
+
+    for (const [kategori, urunler] of Object.entries(restoran.menu)) {
+      html += `<div class="menu-kategori-baslik">${kategori}</div>`;
+      html += `<div class="kart-izgara-2" style="margin-bottom:0.5rem;">`;
+      for (const urun of urunler) {
+        html += `
+          <div class="kart urun-kart">
+            <div class="urun-emoji">${urun.emoji}</div>
+            <div class="urun-icerik">
+              <div class="urun-ad">${urun.ad}</div>
+              <div class="urun-aciklama">${urun.aciklama}</div>
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-top:0.4rem;">
+                <span class="urun-fiyat">₺${urun.fiyat}</span>
+                <button
+                  class="btn btn-birincil"
+                  onclick="sepeteEkle(${urun.id}, '${urun.ad.replace(/'/g,"\\'")}', ${urun.fiyat}, '${urun.emoji}', '${restoran.ad}')"
+                >
+                  + Sepete Ekle
+                </button>
+              </div>
+            </div>
+          </div>`;
+      }
+      html += `</div>`;
+    }
+
+    kapsayici.innerHTML = html;
+  }
+
+  /**
+   * sepeteEkle() — Ürünü sepete ekler ve localStorage'a kaydeder.
+   */
+  function sepeteEkle(id, ad, fiyat, emoji, restoranAd) {
+    const mevcutIndex = sepet.findIndex(s => s.id === id);
+    if (mevcutIndex > -1) {
+      sepet[mevcutIndex].adet++;
+    } else {
+      sepet.push({ id, ad, fiyat, emoji, restoranAd, adet: 1 });
+    }
+    localStorage.setItem('sepet', JSON.stringify(sepet));
+    navSepetGuncelle();
+    toastGoster(`✅ "${ad}" sepete eklendi!`);
+  }
+
+  /** navSepetGuncelle() — Navbar'daki sepet sayacını günceller */
+  function navSepetGuncelle() {
+    const toplam = sepet.reduce((t, u) => t + u.adet, 0);
+    document.getElementById('navSepetSayi').textContent = toplam;
+  }
+
+  /** toastGoster() — Kısa bildirim mesajı gösterir */
+  function toastGoster(mesaj) {
+    const t = document.getElementById('toast');
+    t.textContent = mesaj;
+    t.classList.add('goster');
+    setTimeout(() => t.classList.remove('goster'), 2500);
+  }
+</script>
+
+</body>
+</html>

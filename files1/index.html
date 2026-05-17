@@ -1,0 +1,219 @@
+<!--
+  index.html — Ana Sayfa / Restoran Listesi
+  -------------------------------------------------------
+  Platforma kayıtlı tüm restoranları kart formatında listeler.
+  Her karta tıklandığında ilgili restoranın menü sayfasına
+  (menu.html?id=X) yönlendirilir.
+-->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Restoranlar — LezzetKapı</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- Üst Navigasyon -->
+<nav class="navbar">
+  <div class="navbar-logo">Lezzet<span>Kapı</span></div>
+  <ul class="navbar-links">
+    <li><a href="index.html" class="aktif">🏠 Ana Sayfa</a></li>
+    <li><a href="cart.html">🛒 Sepet</a></li>
+    <li><a href="order.html">📦 Siparişlerim</a></li>
+    <li><a href="login.html">👤 Çıkış</a></li>
+  </ul>
+</nav>
+
+<div class="sayfa-kapsayici">
+
+  <!-- Hero Banner -->
+  <div class="hero">
+    <div class="hero-baslik">Bugün ne yemek istersin? 🍽️</div>
+    <p class="hero-alt">İstanbul genelinde 200'den fazla restoran — kapına kadar.</p>
+  </div>
+
+  <!-- Arama Çubuğu (Görsel Demo) -->
+  <div style="margin-bottom:2rem; display:flex; gap:0.8rem;">
+    <input
+      class="form-girdi"
+      type="text"
+      placeholder="🔍  Restoran veya yemek ara..."
+      style="flex:1;"
+      oninput="restoranFiltrele(this.value)"
+    />
+    <!-- Kategori Filtreleri -->
+    <button class="btn btn-ikincil" onclick="kategoriFiltreUygula('tümü')">Tümü</button>
+    <button class="btn btn-ikincil" onclick="kategoriFiltreUygula('pizza')">🍕 Pizza</button>
+    <button class="btn btn-ikincil" onclick="kategoriFiltreUygula('burger')">🍔 Burger</button>
+    <button class="btn btn-ikincil" onclick="kategoriFiltreUygula('türk')">🍖 Türk</button>
+  </div>
+
+  <!-- Restoran Sayısı -->
+  <div style="margin-bottom:1rem; font-size:0.9rem; color:var(--yazi-gri);">
+    <span id="restoranSayisi">6</span> restoran listeleniyor
+  </div>
+
+  <!-- Restoran Kart Izgarası -->
+  <div class="kart-izgara-3" id="restoranIzgarasi">
+
+    <!-- Restoran 1 -->
+    <div class="kart restoran-kart" onclick="menuGit(1)" data-ad="Bella Italia" data-kategori="pizza">
+      <div class="restoran-kart-resim">🍕</div>
+      <div class="restoran-kart-icerik">
+        <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:0.3rem;">
+          <h2 class="restoran-kart-baslik">Bella Italia</h2>
+          <span class="rozet rozet-yesil">Açık</span>
+        </div>
+        <p class="restoran-kart-kategori">🍕 Pizza • Makarna • İtalyan Mutfağı</p>
+        <div class="yildizlar">★★★★★</div>
+        <div class="restoran-kart-meta">
+          <span>⏱ 25-35 dk</span>
+          <span>🛵 ₺12 teslimat</span>
+          <span>💳 Min. ₺80</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Restoran 2 -->
+    <div class="kart restoran-kart" onclick="menuGit(2)" data-ad="Burger Bros" data-kategori="burger">
+      <div class="restoran-kart-resim" style="background:linear-gradient(135deg,#FFD6B0,#FF8C42);">🍔</div>
+      <div class="restoran-kart-icerik">
+        <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:0.3rem;">
+          <h2 class="restoran-kart-baslik">Burger Bros</h2>
+          <span class="rozet rozet-yesil">Açık</span>
+        </div>
+        <p class="restoran-kart-kategori">🍔 Burger • Parmak Patates • Amerikan</p>
+        <div class="yildizlar">★★★★☆</div>
+        <div class="restoran-kart-meta">
+          <span>⏱ 20-30 dk</span>
+          <span>🛵 Ücretsiz</span>
+          <span>💳 Min. ₺60</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Restoran 3 -->
+    <div class="kart restoran-kart" onclick="menuGit(3)" data-ad="Osmanlı Sofrası" data-kategori="türk">
+      <div class="restoran-kart-resim" style="background:linear-gradient(135deg,#FFE5B4,#FFA500);">🍖</div>
+      <div class="restoran-kart-icerik">
+        <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:0.3rem;">
+          <h2 class="restoran-kart-baslik">Osmanlı Sofrası</h2>
+          <span class="rozet rozet-yesil">Açık</span>
+        </div>
+        <p class="restoran-kart-kategori">🍖 Kebap • Döner • Türk Mutfağı</p>
+        <div class="yildizlar">★★★★★</div>
+        <div class="restoran-kart-meta">
+          <span>⏱ 30-45 dk</span>
+          <span>🛵 ₺10 teslimat</span>
+          <span>💳 Min. ₺100</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Restoran 4 -->
+    <div class="kart restoran-kart" onclick="menuGit(4)" data-ad="Sushi Zen" data-kategori="suşi">
+      <div class="restoran-kart-resim" style="background:linear-gradient(135deg,#E0F7FA,#80DEEA);">🍣</div>
+      <div class="restoran-kart-icerik">
+        <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:0.3rem;">
+          <h2 class="restoran-kart-baslik">Sushi Zen</h2>
+          <span class="rozet rozet-mavi">Yoğun</span>
+        </div>
+        <p class="restoran-kart-kategori">🍣 Suşi • Maki • Japon Mutfağı</p>
+        <div class="yildizlar">★★★★☆</div>
+        <div class="restoran-kart-meta">
+          <span>⏱ 40-55 dk</span>
+          <span>🛵 ₺20 teslimat</span>
+          <span>💳 Min. ₺150</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Restoran 5 -->
+    <div class="kart restoran-kart" onclick="menuGit(5)" data-ad="Taco Fiesta" data-kategori="meksika">
+      <div class="restoran-kart-resim" style="background:linear-gradient(135deg,#FFF9C4,#FFEE58);">🌮</div>
+      <div class="restoran-kart-icerik">
+        <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:0.3rem;">
+          <h2 class="restoran-kart-baslik">Taco Fiesta</h2>
+          <span class="rozet rozet-yesil">Açık</span>
+        </div>
+        <p class="restoran-kart-kategori">🌮 Taco • Burrito • Meksika Mutfağı</p>
+        <div class="yildizlar">★★★☆☆</div>
+        <div class="restoran-kart-meta">
+          <span>⏱ 25-35 dk</span>
+          <span>🛵 ₺15 teslimat</span>
+          <span>💳 Min. ₺70</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Restoran 6 -->
+    <div class="kart restoran-kart" onclick="menuGit(6)" data-ad="Pho Saigon" data-kategori="asya">
+      <div class="restoran-kart-resim" style="background:linear-gradient(135deg,#E8F5E9,#A5D6A7);">🍜</div>
+      <div class="restoran-kart-icerik">
+        <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:0.3rem;">
+          <h2 class="restoran-kart-baslik">Pho Saigon</h2>
+          <span class="rozet rozet-yesil">Açık</span>
+        </div>
+        <p class="restoran-kart-kategori">🍜 Noodle • Pho • Vietnam Mutfağı</p>
+        <div class="yildizlar">★★★★☆</div>
+        <div class="restoran-kart-meta">
+          <span>⏱ 30-40 dk</span>
+          <span>🛵 ₺10 teslimat</span>
+          <span>💳 Min. ₺90</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /restoranIzgarasi -->
+
+</div><!-- /sayfa-kapsayici -->
+
+<footer class="footer">
+  © 2025 LezzetKapı — Üniversite Demo Projesi
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  /**
+   * menuGit() — Tıklanan restoranın menü sayfasına yönlendirir.
+   * URL parametresiyle restoran ID'si aktarılır.
+   */
+  function menuGit(restoranId) {
+    window.location.href = `menu.html?id=${restoranId}`;
+  }
+
+  /**
+   * restoranFiltrele() — Arama kutusuna göre kartları filtreler.
+   */
+  function restoranFiltrele(aramaMetni) {
+    const kartlar = document.querySelectorAll('.restoran-kart');
+    let gorunenSayi = 0;
+    kartlar.forEach(kart => {
+      const ad = kart.dataset.ad.toLowerCase();
+      const eslesme = ad.includes(aramaMetni.toLowerCase());
+      kart.style.display = eslesme ? 'block' : 'none';
+      if (eslesme) gorunenSayi++;
+    });
+    document.getElementById('restoranSayisi').textContent = gorunenSayi;
+  }
+
+  /**
+   * kategoriFiltreUygula() — Kategori butonuna göre kartları filtreler.
+   */
+  function kategoriFiltreUygula(kategori) {
+    const kartlar = document.querySelectorAll('.restoran-kart');
+    let gorunenSayi = 0;
+    kartlar.forEach(kart => {
+      const eslesme = kategori === 'tümü' || kart.dataset.kategori === kategori;
+      kart.style.display = eslesme ? 'block' : 'none';
+      if (eslesme) gorunenSayi++;
+    });
+    document.getElementById('restoranSayisi').textContent = gorunenSayi;
+  }
+</script>
+
+</body>
+</html>

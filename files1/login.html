@@ -1,0 +1,150 @@
+<!--
+  login.html — Kullanıcı Giriş Sayfası
+  -------------------------------------------------------
+  Kullanıcının sisteme e-posta ve şifresiyle giriş yaptığı
+  sayfa. Sol taraf dekoratif panel, sağ taraf giriş formu.
+  Demo: herhangi bir e-posta/şifre ile giriş yapılabilir.
+-->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Giriş Yap — LezzetKapı</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="giris-sayfa">
+
+  <!-- Sol Dekoratif Panel -->
+  <div class="giris-sol">
+    <div class="giris-sol-logo">LezzetKapı</div>
+    <p class="giris-sol-slogan">
+      En sevdiğin restoranlardan kapına sıcak yemekler.
+    </p>
+    <div class="giris-sol-emojiler">🍕 🍔 🌮</div>
+  </div>
+
+  <!-- Sağ Giriş Formu -->
+  <div class="giris-sag">
+    <div class="giris-form-kutu">
+      <h1 class="giris-form-baslik">Tekrar Hoş Geldin!</h1>
+      <p class="giris-form-alt">Hesabına giriş yaparak sipariş ver.</p>
+
+      <!-- Giriş Formu -->
+      <div id="girisFormu">
+
+        <!-- E-posta Alanı -->
+        <div class="form-grup">
+          <label class="form-etiket" for="eposta">E-posta Adresi</label>
+          <input
+            class="form-girdi"
+            type="email"
+            id="eposta"
+            placeholder="ornek@email.com"
+            value="demo@lezzetkapi.com"
+          />
+        </div>
+
+        <!-- Şifre Alanı -->
+        <div class="form-grup">
+          <label class="form-etiket" for="sifre">Şifre</label>
+          <input
+            class="form-girdi"
+            type="password"
+            id="sifre"
+            placeholder="••••••••"
+            value="123456"
+          />
+        </div>
+
+        <!-- Beni Hatırla & Şifremi Unuttum -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+          <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; cursor:pointer;">
+            <input type="checkbox" checked /> Beni hatırla
+          </label>
+          <a href="#" style="font-size:0.85rem; color:var(--turuncu); font-weight:600;">
+            Şifremi unuttum
+          </a>
+        </div>
+
+        <!-- Giriş Butonu -->
+        <button
+          class="btn btn-birincil btn-buyuk btn-tam-genislik"
+          onclick="girisYap()"
+        >
+          🔑 Giriş Yap
+        </button>
+
+        <!-- Ayırıcı -->
+        <div style="text-align:center; margin:1.5rem 0; position:relative;">
+          <hr class="bolucü" style="margin:0;" />
+          <span style="
+            position:absolute; top:-10px; left:50%; transform:translateX(-50%);
+            background:#fff; padding:0 0.8rem; font-size:0.8rem; color:var(--yazi-gri);
+          ">veya</span>
+        </div>
+
+        <!-- Sosyal Giriş Butonları (Görsel Demo) -->
+        <button class="btn btn-ikincil btn-tam-genislik" style="margin-bottom:0.8rem;"
+                onclick="alert('Google ile giriş — demo amaçlı devre dışı')">
+          🌐 Google ile Giriş Yap
+        </button>
+
+      </div>
+
+      <!-- Kayıt Yönlendirme -->
+      <p class="giris-alt-link">
+        Hesabın yok mu? <a href="#">Kayıt Ol</a>
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Bildirim Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  /**
+   * girisYap() — Giriş formunu doğrular ve ana sayfaya yönlendirir.
+   * Demo amaçlı: gerçek doğrulama yoktur.
+   */
+  function girisYap() {
+    const eposta = document.getElementById('eposta').value.trim();
+    const sifre  = document.getElementById('sifre').value.trim();
+
+    // Basit boşluk kontrolü
+    if (!eposta || !sifre) {
+      toastGoster('⚠️ Lütfen tüm alanları doldurun.');
+      return;
+    }
+
+    // E-posta format kontrolü
+    if (!eposta.includes('@')) {
+      toastGoster('⚠️ Geçerli bir e-posta girin.');
+      return;
+    }
+
+    // Demo giriş — doğrudan ana sayfaya yönlendirme
+    toastGoster('✅ Giriş başarılı! Yönlendiriliyorsunuz...');
+    setTimeout(() => { window.location.href = 'index.html'; }, 1200);
+  }
+
+  /** toastGoster() — Ekran bildirimi gösterir. */
+  function toastGoster(mesaj) {
+    const t = document.getElementById('toast');
+    t.textContent = mesaj;
+    t.classList.add('goster');
+    setTimeout(() => t.classList.remove('goster'), 3000);
+  }
+
+  // Enter tuşu ile giriş desteği
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') girisYap();
+  });
+</script>
+
+</body>
+</html>
